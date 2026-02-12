@@ -10,9 +10,9 @@ import domain.model.GameStatus
 class MinimaxService(private val repository: GameRepository) : GameService {
     private fun score(currentGame: CurrentGame, depth: Int, player: Cell, computer: Cell): Int {
         return when {
-            currentGame.board.checkWin(computer) -> 10 - depth // компьютер выйграл
-            currentGame.board.checkWin(player)   -> depth - 10 // игрок выйграл
-            else                                 -> 0 // ничья
+            currentGame.board.checkWin(computer) -> 10 - depth
+            currentGame.board.checkWin(player)   -> depth - 10
+            else                                 -> 0
         }
     }
 
@@ -90,7 +90,7 @@ class MinimaxService(private val repository: GameRepository) : GameService {
             for (j in 0 until GameBoard.SIZE) {
                 if (prevCells[i][j] != currCells[i][j]) {
                     if (prevCells[i][j] != Cell.EMPTY || currCells[i][j] != Cell.PLAYER) {
-                        return false // изменён чужой ход или неправильный символ
+                        return false
                     }
                     diffCount++
                 }
