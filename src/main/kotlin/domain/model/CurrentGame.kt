@@ -1,18 +1,46 @@
 package domain.model
 
 import java.util.UUID
+import kotlin.random.Random
 
-class CurrentGame(
+data class CurrentGame(
     val id: UUID,
     val board: GameBoard,
+    val player1: User,
+    val player2: User?,
+    val currentTurn: UUID?,
+    val isTwoPlayers: Boolean,
+    val status: GameStatus,
+    val winnerIs: UUID?
 ) {
-    lateinit var gameStatus: GameStatus
 
     companion object {
-        fun new(): CurrentGame {
-            val new = CurrentGame(id = UUID.randomUUID(), board = GameBoard.empty())
-            new.gameStatus = GameStatus.IN_PROGRESS
-            return new
-        }
+        fun new(player: User, isTwoPlayers: Boolean): CurrentGame =
+            if(isTwoPlayers) createGameForTwoPlayers(player)
+            else createGameWithComputer(player)
+
+        private fun createGameForTwoPlayers(player: User): CurrentGame = CurrentGame(
+            id = UUID.randomUUID(),
+            board = GameBoard.empty(),
+            player1 = player,
+            player2 = null,
+            currentTurn = player.id,
+            isTwoPlayers = true,
+            status = GameStatus.WAITING,
+            winnerIs = null
+
+        )
+
+        private fun createGameWithComputer(player: User): CurrentGame = CurrentGame(
+            id = UUID.randomUUID(),
+            board = GameBoard.empty(),
+            player1 = player,
+            player2 = null,
+            currentTurn = player.id,
+            isTwoPlayers = false,
+            status = GameStatus.IN_PROGRESS,
+            winnerIs = null
+
+        )
     }
 }

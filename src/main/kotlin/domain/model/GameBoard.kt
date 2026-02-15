@@ -45,7 +45,7 @@ class GameBoard(val field: Array<Array<Cell>>) {
     }
 
     fun isGameOver(): Boolean {
-        return checkWin(Cell.COMPUTER) || checkWin(Cell.PLAYER) || getAvailableMoves().isEmpty()
+        return checkWin(Cell.O) || checkWin(Cell.X) || getAvailableMoves().isEmpty()
     }
 
     fun makeMove(move: Pair<Int, Int>, symbol: Cell) {
