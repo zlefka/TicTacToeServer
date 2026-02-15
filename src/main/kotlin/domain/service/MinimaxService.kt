@@ -1,7 +1,7 @@
 package domain.service
 
 import datasource.mapper.MapperDomainData
-import datasource.repository.GameRepository
+import domain.repository.GameRepository
 import domain.model.Cell
 import domain.model.CurrentGame
 import domain.model.GameBoard

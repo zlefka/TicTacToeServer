@@ -1,12 +1,12 @@
 package di
 
-import datasource.repository.GameRepository
-import datasource.repository.MemoryGameRepository
+import domain.repository.GameRepository
+import datasource.repository.GameRepositoryImpl
 import domain.service.GameService
 import domain.service.MinimaxService
 import org.koin.dsl.module
 
 val gameModule = module {
-    single<GameRepository> { MemoryGameRepository() }
+    single<GameRepository> { GameRepositoryImpl() }
     single<GameService> { MinimaxService(get()) }
 }

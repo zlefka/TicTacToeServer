@@ -1,4 +1,4 @@
-package datasource.repository
+package domain.repository
 
 import datasource.model.GameEntity
 import java.util.UUID

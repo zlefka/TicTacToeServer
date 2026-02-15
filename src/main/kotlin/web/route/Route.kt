@@ -3,7 +3,7 @@ package web.route
 import datasource.mapper.MapperDataDomain
 import datasource.mapper.MapperDomainData
 import datasource.model.GameEntity
-import datasource.repository.GameRepository
+import domain.repository.GameRepository
 import domain.model.CurrentGame
 import domain.model.GameStatus
 import domain.service.GameService
