@@ -1,4 +1,4 @@
 package datasource.model
 
-class GameBoardEntity(val cells: Array<IntArray>) {
+class GameBoardEntity(val cells: Array<Array<CellEntity>>) {
 }
