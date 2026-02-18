@@ -68,7 +68,7 @@ class MinimaxComputerService(private val repository: GameRepository) : GameServi
         return bestMove
     }
 
-    override fun makeComputerMove(game: CurrentGame): CurrentGame {
+    override fun makeMove(game: CurrentGame): CurrentGame {
         val bestMove = findBestMove(game)
         val newBoard = game.board.copy()
         newBoard.makeMove(bestMove, Cell.O)
@@ -79,8 +79,7 @@ class MinimaxComputerService(private val repository: GameRepository) : GameServi
             GameStatus.DRAW -> gameWithUpdatedBoard.copy(status = GameStatus.FINISHED, winnerIs = null)
             else -> gameWithUpdatedBoard.copy(status = GameStatus.IN_PROGRESS, currentTurn = game.player1.id)
         }
-        val gameEntity = MapperDomainData.fromDomainToData(updatedGame)
-        repository.save(gameEntity)
+        repository.save(updatedGame)
         return updatedGame
     }
 
