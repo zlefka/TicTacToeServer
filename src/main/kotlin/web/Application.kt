@@ -1,10 +1,10 @@
 package web
 
 import io.ktor.server.application.Application
-import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.ktor.server.plugins.calllogging.CallLogging
+import web.module.configureAuthentication
+import web.module.configureDatabases
 import web.module.configureFeatures
 import web.module.configureKoin
 import web.module.configureSerialization
@@ -21,4 +21,6 @@ fun Application.module() {
     configureRouting()
     configureFeatures()
     configureKoin()
+    configureDatabases()
+    configureAuthentication()
 }
