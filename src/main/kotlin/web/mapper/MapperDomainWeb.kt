@@ -5,7 +5,6 @@ import domain.model.CurrentGame
 import domain.model.GameBoard.Companion.SIZE
 import web.model.GameBoardDTO
 import web.model.GameDTO
-import java.util.UUID
 
 class MapperDomainWeb {
     companion object {
@@ -13,13 +12,20 @@ class MapperDomainWeb {
             val newBoard = List(SIZE) { i ->
                 List(SIZE) { j ->
                     when (game.board.field[i][j]) {
-                        Cell.COMPUTER -> 2
-                        Cell.PLAYER   -> 1
+                        Cell.O -> 2
+                        Cell.X -> 1
                         else          -> 0
                     }
                 }
             }
-            return GameDTO(id = game.id.toString(), board = GameBoardDTO(cells = newBoard))
+            return GameDTO(id = game.id.toString(),
+                board = GameBoardDTO(cells = newBoard),
+                player1 = game.player1.id.toString(),
+                player2 = game.player2?.id?.toString(),
+                currentTurn = game.currentTurn?.toString(),
+                isTwoPlayers = game.isTwoPlayers,
+                status = game.status.toString(),
+                winnerIs = game.winnerIs?.toString())
         }
     }
 }
