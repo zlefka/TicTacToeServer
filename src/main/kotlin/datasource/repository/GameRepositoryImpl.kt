@@ -16,6 +16,7 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import web.serialization.UUIDSerializer
 
@@ -35,7 +36,7 @@ class GameRepositoryImpl() : GameRepository {
                 }
             )
 
-            val idExists = GameTable.select( GameTable.id eq game.id ).singleOrNull()
+            val idExists = GameTable.selectAll().where { GameTable.id eq game.id }.singleOrNull()
             println("Serializing state: ${game.state}")
             val jsonWithUUID = Json {
                 prettyPrint = true
@@ -74,23 +75,33 @@ class GameRepositoryImpl() : GameRepository {
     }
 
     override fun get(id: UUID): CurrentGame? = transaction {
-        val gameDB = GameTable.select(GameTable.id eq id).singleOrNull() ?: return@transaction null
+        val gameDB = GameTable.selectAll().where { GameTable.id eq id }.singleOrNull() ?: return@transaction null
+
         val boardStr = gameDB[GameTable.board]
         val board = Json.decodeFromString<List<List<CellEntity>>>(boardStr)
 
+        val player1Row = Users.selectAll().where { Users.id eq gameDB[GameTable.user1] }.single()
+        val player1 = User(player1Row[Users.id], player1Row[Users.login], player1Row[Users.passwordHash])
 
-        val player1DB = Users.select(Users.id eq gameDB[GameTable.user1]).single()
-        val player1 = User(player1DB[Users.id], player1DB[Users.login], player1DB[Users.passwordHash])
-
-        val player2 = gameDB[GameTable.user2]?.let { user2 ->
-            val user2 = Users.select(listOf(Users.id eq user2)).single()
-            User(user2[Users.id], user2[Users.login], user2[Users.passwordHash])
+        val player2 = gameDB[GameTable.user2]?.let { user2Id ->
+            Users.selectAll()
+                .where { Users.id eq user2Id }
+                .singleOrNull()
+                ?.let { row ->
+                    User(row[Users.id], row[Users.login], row[Users.passwordHash])
+                }
         }
 
-        val gameState = Json.decodeFromString<GameState>(
-            gameDB[GameTable.state]
-        )
+        val jsonWithUUID = Json {
+            prettyPrint = true
+            isLenient = true
+            ignoreUnknownKeys = true
+            serializersModule = SerializersModule {
+                contextual(UUID::class, UUIDSerializer)
+            }
+        }
 
+        val gameState = jsonWithUUID.decodeFromString<GameState>(gameDB[GameTable.state])
 
         val mapBoard = Array(board.size) { i ->
             Array(board[i].size) { j ->
@@ -102,19 +113,16 @@ class GameRepositoryImpl() : GameRepository {
             }
         }
 
-        val player1Sym = Cell.valueOf(gameDB[GameTable.player1Symbol])
-        val player2Sym = gameDB[GameTable.player2Symbol].let { Cell.valueOf(it) }
-
         CurrentGame(
             id = gameDB[GameTable.id],
             board = GameBoard(mapBoard),
             player1 = player1,
             player2 = player2,
             isBot = gameDB[GameTable.isBot],
-            player1Symbol = player1Sym,
-            player2Symbol = player2Sym,
+            player1Symbol = Cell.valueOf(gameDB[GameTable.player1Symbol]),
+            player2Symbol = Cell.valueOf(gameDB[GameTable.player2Symbol]),
             state = gameState,
-            isTwoPlayers =gameDB[GameTable.isTwoPlayers]
+            isTwoPlayers = gameDB[GameTable.isTwoPlayers]
         )
     }
 }

@@ -12,8 +12,8 @@ import org.koin.dsl.module
 import kotlin.math.sin
 
 val gameModule = module {
-    single<GameRepository> { GameRepositoryImpl() } // singleton репозиторий
-    single<GameService> { MinimaxComputerService(get()) }     // singleton сервис, получает репозиторий
+    single<GameRepository> { GameRepositoryImpl() }
+    single<GameService> { MinimaxComputerService(get()) }
     single<UserRepository> { UserRepositoryImpl() }
     single<UserService> { UserService(get()) }
 }
