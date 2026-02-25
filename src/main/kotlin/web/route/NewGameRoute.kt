@@ -2,9 +2,7 @@ package web.route
 
 import domain.model.Cell
 import domain.model.CurrentGame
-import domain.model.User
 import domain.repository.GameRepository
-import domain.service.GameService
 import domain.service.UserService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.UserIdPrincipal
@@ -13,12 +11,10 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import org.koin.ktor.ext.inject
 import web.mapper.MapperDomainWeb
 import web.model.CreateGameRequest
 import web.model.WebCell
 import java.util.UUID
-import kotlin.getValue
 
 fun Route.newGame(gameRepo: GameRepository, userService: UserService) {
     post("/game/new") {

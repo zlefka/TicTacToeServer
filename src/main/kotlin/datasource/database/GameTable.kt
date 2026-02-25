@@ -1,9 +1,7 @@
 package datasource.database
 
-import datasource.model.GameStatusEntity
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.javatime.datetime
 
 object GameTable : Table("game") {
     val id = uuid("id").autoGenerate()

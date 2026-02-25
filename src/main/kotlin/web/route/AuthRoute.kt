@@ -2,14 +2,11 @@ package web.route
 
 import domain.service.UserService
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import org.koin.ktor.ext.inject
 import web.model.SignUpRequest
-import kotlin.getValue
 
 fun Route.signUpRoute(userService: UserService) {
     post("/signup") {

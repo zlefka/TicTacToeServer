@@ -1,11 +1,7 @@
 package domain.service
 
-import domain.model.Cell
 import domain.repository.GameRepository
 import domain.model.CurrentGame
-import domain.model.GameBoard
-import domain.model.GameState
-import org.koin.core.context.unloadKoinModules
 import java.util.UUID
 
 class TwoPlayersService(private val repository: GameRepository) : GameService {

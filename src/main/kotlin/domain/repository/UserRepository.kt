@@ -2,7 +2,6 @@ package domain.repository
 
 import domain.model.User
 import java.util.UUID
-import kotlin.uuid.Uuid
 
 interface UserRepository {
     fun saveUser(user: User)

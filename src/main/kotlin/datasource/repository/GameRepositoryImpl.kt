@@ -15,7 +15,6 @@ import kotlinx.serialization.modules.SerializersModule
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import web.serialization.UUIDSerializer

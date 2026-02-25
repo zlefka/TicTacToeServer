@@ -4,8 +4,6 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.http.*
 import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.request.path
-import org.slf4j.event.Level
 
 fun Application.configureFeatures() {
 

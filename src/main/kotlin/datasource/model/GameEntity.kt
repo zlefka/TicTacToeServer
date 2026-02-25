@@ -1,9 +1,5 @@
 package datasource.model
 
-import domain.model.Cell
-import domain.model.GameBoard
-import domain.model.GameState
-import domain.model.User
 import java.util.UUID
 
 class GameEntity(

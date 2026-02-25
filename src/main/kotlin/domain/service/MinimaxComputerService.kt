@@ -3,8 +3,6 @@ package domain.service
 import domain.repository.GameRepository
 import domain.model.Cell
 import domain.model.CurrentGame
-import domain.model.GameBoard
-import domain.model.GameState
 import java.util.UUID
 
 class MinimaxComputerService(private val repository: GameRepository) : GameService {

@@ -1,20 +1,15 @@
 package web.route
 
 import domain.repository.GameRepository
-import domain.service.GameService
 import domain.service.UserService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.UserIdPrincipal
 import io.ktor.server.auth.principal
-import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import org.koin.ktor.ext.inject
 import web.mapper.MapperDomainWeb
-import web.model.GameDTO
 import java.util.UUID
-import kotlin.getValue
 
 fun Route.gameById(gameRepo: GameRepository, userService: UserService) {
     post("/game/{id}") {
