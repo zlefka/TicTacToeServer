@@ -21,11 +21,16 @@ class UserService(private val userRepository: UserRepository) {
     fun authenticate(login: String, password: String): UUID? {
         val user = userRepository.getUserByLogin(login) ?: return null
         val hashPass = hashPassword(password)
+        println("DB hash: ${user.passwordHash}, computed hash: $hashPass")
         return if(user.passwordHash == hashPass) user.id else null
     }
 
     fun getUserById(id: UUID): User? {
         return userRepository.getUserById(id)
+    }
+
+    fun getUserByLogin(login: String): User? {
+        return userRepository.getUserByLogin(login)
     }
 
     private fun hashPassword(password: String): String {

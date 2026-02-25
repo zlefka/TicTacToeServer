@@ -9,4 +9,5 @@ interface UserRepository {
     fun getUserById(uuid: UUID): User?
     fun getUserByLogin(login: String): User?
     fun isUserExistsByLogin(login: String): Boolean
+    fun getComputer(): UUID?
 }

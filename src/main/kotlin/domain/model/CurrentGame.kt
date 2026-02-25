@@ -1,46 +1,72 @@
 package domain.model
 
 import java.util.UUID
-import kotlin.random.Random
 
 data class CurrentGame(
     val id: UUID,
     val board: GameBoard,
     val player1: User,
     val player2: User?,
-    val currentTurn: UUID?,
+    val isBot: Boolean,
+    val player1Symbol: Cell,
+    val player2Symbol: Cell?,
+    val state: GameState,
     val isTwoPlayers: Boolean,
-    val status: GameStatus,
-    val winnerIs: UUID?
 ) {
 
     companion object {
-        fun new(player: User, isTwoPlayers: Boolean): CurrentGame =
-            if(isTwoPlayers) createGameForTwoPlayers(player)
-            else createGameWithComputer(player)
+        fun new(player: User, isTwoPlayers: Boolean, computer: User? = null): CurrentGame {
+            return if (isTwoPlayers) {
+                CurrentGame(
+                    id = UUID.randomUUID(),
+                    board = GameBoard.empty(),
+                    player1 = player,
+                    player2 = null,
+                    isBot = false,
+                    player1Symbol = Cell.X,
+                    player2Symbol = null,
+                    state = GameState.WaitingForPlayers,
+                    isTwoPlayers = true
+                )
+            } else {
+                CurrentGame(
+                    id = UUID.randomUUID(),
+                    board = GameBoard.empty(),
+                    player1 = player,
+                    player2 = computer,
+                    isBot = true,
+                    player1Symbol = Cell.X,
+                    player2Symbol = Cell.O,
+                    state = GameState.PlayerTurn(player.id),
+                    isTwoPlayers = false,
+                )
+            }
+        }
+    }
 
-        private fun createGameForTwoPlayers(player: User): CurrentGame = CurrentGame(
-            id = UUID.randomUUID(),
-            board = GameBoard.empty(),
-            player1 = player,
-            player2 = null,
-            currentTurn = player.id,
-            isTwoPlayers = true,
-            status = GameStatus.WAITING,
-            winnerIs = null
+    private fun applyMove(coordinates: Pair<Int, Int>, playerID: UUID): CurrentGame {
+        val updatedBoard = this.board.copy()
+        val (row, col) = coordinates
+        val currentPlayerID = (state as? GameState.PlayerTurn)?.playerID
+        if(playerID != currentPlayerID) {
+            throw IllegalArgumentException("It is another player's turn")
+        }
 
-        )
+        val symbol = if(playerID == player1.id) player1Symbol else player2Symbol!!
+        if(board.field[row][col] != Cell.EMPTY) {
+            throw IllegalArgumentException("This cell is busy")
+        } else {
+            updatedBoard.field[row][col] = symbol
+        }
 
-        private fun createGameWithComputer(player: User): CurrentGame = CurrentGame(
-            id = UUID.randomUUID(),
-            board = GameBoard.empty(),
-            player1 = player,
-            player2 = null,
-            currentTurn = player.id,
-            isTwoPlayers = false,
-            status = GameStatus.IN_PROGRESS,
-            winnerIs = null
-
-        )
+        val newState = when {
+            updatedBoard.checkWin(symbol) -> GameState.Winner(playerID)
+            updatedBoard.getAvailableMoves().isEmpty() -> GameState.Draw
+            else -> {
+                val nextPlayerID = if(playerID == player1.id) player2?.id ?: player1.id else player1.id
+                GameState.PlayerTurn(nextPlayerID)
+            }
+        }
+        return copy(board = updatedBoard, state = newState)
     }
 }

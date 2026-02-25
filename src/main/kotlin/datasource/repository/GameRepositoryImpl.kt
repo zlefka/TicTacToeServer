@@ -3,19 +3,21 @@ package datasource.repository
 import datasource.database.GameTable
 import datasource.database.Users
 import datasource.model.CellEntity
+import domain.model.Cell
 import domain.model.CurrentGame
 import domain.model.GameBoard
-import domain.model.GameStatus
+import domain.model.GameState
 import domain.model.User
 import domain.repository.GameRepository
-import io.ktor.client.plugins.UserAgent
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.update
+import web.serialization.UUIDSerializer
 
 class GameRepositoryImpl() : GameRepository {
 
@@ -25,15 +27,27 @@ class GameRepositoryImpl() : GameRepository {
                 game.board.field.map { row ->
                     row.map { cell ->
                         when (cell) {
-                            domain.model.Cell.EMPTY -> CellEntity.EMPTY
-                            domain.model.Cell.X     -> CellEntity.X
-                            domain.model.Cell.O     -> CellEntity.O
+                            Cell.EMPTY -> CellEntity.EMPTY
+                            Cell.X     -> CellEntity.X
+                            Cell.O     -> CellEntity.O
                         }
                     }
                 }
             )
 
-            val idExists = GameTable.select(listOf(GameTable.id eq game.id)).singleOrNull()
+            val idExists = GameTable.select( GameTable.id eq game.id ).singleOrNull()
+            println("Serializing state: ${game.state}")
+            val jsonWithUUID = Json {
+                prettyPrint = true
+                isLenient = true
+                ignoreUnknownKeys = true
+                serializersModule = SerializersModule {
+                    contextual(UUID::class, UUIDSerializer)
+                }
+            }
+
+            val stateJson = jsonWithUUID.encodeToString(game.state)
+            println("encoded")
 
             if (idExists == null) {
                 GameTable.insert {
@@ -41,16 +55,17 @@ class GameRepositoryImpl() : GameRepository {
                     it[board] = boardJson
                     it[user1] = game.player1.id
                     it[user2] = game.player2?.id
-                    it[currentTurn] = game.currentTurn
-                    it[state] = game.status.toEntity()
-                    it[winner] = game.winnerIs
+                    it[isBot] = game.isBot
+                    it[player1Symbol] = game.player1Symbol.toString()
+                    it[player2Symbol] = game.player2Symbol.toString()
+                    it[state] = stateJson
+                    it[isTwoPlayers] = game.isTwoPlayers
                 }
             } else {
-                GameTable.update {
+                GameTable.update({ GameTable.id eq game.id }) {
                     it[board] = boardJson
-                    it[currentTurn] = game.currentTurn
-                    it[state] = game.status.toEntity()
-                    it[winner] = game.winnerIs
+                    it[isBot] = game.isBot
+                    it[state] = stateJson
                     it[user2] = game.player2?.id
                 }
             }
@@ -58,62 +73,48 @@ class GameRepositoryImpl() : GameRepository {
 
     }
 
-    override fun get(id: UUID): CurrentGame? {
-        val gameDB = transaction {
-            GameTable.select(listOf(GameTable.id eq id)).singleOrNull()
-        } ?: return null
+    override fun get(id: UUID): CurrentGame? = transaction {
+        val gameDB = GameTable.select(GameTable.id eq id).singleOrNull() ?: return@transaction null
         val boardStr = gameDB[GameTable.board]
         val board = Json.decodeFromString<List<List<CellEntity>>>(boardStr)
+
+
+        val player1DB = Users.select(Users.id eq gameDB[GameTable.user1]).single()
+        val player1 = User(player1DB[Users.id], player1DB[Users.login], player1DB[Users.passwordHash])
+
+        val player2 = gameDB[GameTable.user2]?.let { user2 ->
+            val user2 = Users.select(listOf(Users.id eq user2)).single()
+            User(user2[Users.id], user2[Users.login], user2[Users.passwordHash])
+        }
+
+        val gameState = Json.decodeFromString<GameState>(
+            gameDB[GameTable.state]
+        )
+
 
         val mapBoard = Array(board.size) { i ->
             Array(board[i].size) { j ->
                 when (board[i][j]) {
-                    CellEntity.EMPTY -> domain.model.Cell.EMPTY
-                    CellEntity.X     -> domain.model.Cell.X
-                    CellEntity.O     -> domain.model.Cell.O
+                    CellEntity.EMPTY -> Cell.EMPTY
+                    CellEntity.X     -> Cell.X
+                    CellEntity.O     -> Cell.O
                 }
             }
         }
 
-        val player1 = transaction {
-            val user1 = Users.select(listOf(Users.id eq gameDB[GameTable.user1])).single()
-            User(user1[Users.id], user1[Users.login], user1[Users.passwordHash])
-        }
+        val player1Sym = Cell.valueOf(gameDB[GameTable.player1Symbol])
+        val player2Sym = gameDB[GameTable.player2Symbol].let { Cell.valueOf(it) }
 
-        val player2 = gameDB[GameTable.user2]?.let {
-            transaction {
-                val user2 = Users.select(listOf(Users.id eq gameDB[GameTable.user1])).single()
-                User(user2[Users.id], user2[Users.login], user2[Users.passwordHash])
-            }
-        }
-
-        return CurrentGame(
+        CurrentGame(
             id = gameDB[GameTable.id],
             board = GameBoard(mapBoard),
             player1 = player1,
             player2 = player2,
-            currentTurn = gameDB[GameTable.currentTurn],
-            isTwoPlayers = player2 != null,
-            status = gameDB[GameTable.state].toDomain(),
-            winnerIs = gameDB[GameTable.winner]
+            isBot = gameDB[GameTable.isBot],
+            player1Symbol = player1Sym,
+            player2Symbol = player2Sym,
+            state = gameState,
+            isTwoPlayers =gameDB[GameTable.isTwoPlayers]
         )
-    }
-
-    private fun GameStatus.toEntity(): datasource.model.GameStatusEntity = when (this) {
-        GameStatus.WAITING      -> datasource.model.GameStatusEntity.WAITING
-        GameStatus.IN_PROGRESS  -> datasource.model.GameStatusEntity.IN_PROGRESS
-        GameStatus.PLAYER_WON   -> datasource.model.GameStatusEntity.PLAYER_WON
-        GameStatus.COMPUTER_WON -> datasource.model.GameStatusEntity.COMPUTER_WON
-        GameStatus.DRAW         -> datasource.model.GameStatusEntity.DRAW
-        GameStatus.FINISHED     -> datasource.model.GameStatusEntity.FINISHED
-    }
-
-    fun datasource.model.GameStatusEntity.toDomain(): GameStatus = when (this) {
-        datasource.model.GameStatusEntity.WAITING      -> GameStatus.WAITING
-        datasource.model.GameStatusEntity.IN_PROGRESS  -> GameStatus.IN_PROGRESS
-        datasource.model.GameStatusEntity.PLAYER_WON   -> GameStatus.PLAYER_WON
-        datasource.model.GameStatusEntity.COMPUTER_WON -> GameStatus.COMPUTER_WON
-        datasource.model.GameStatusEntity.DRAW         -> GameStatus.DRAW
-        datasource.model.GameStatusEntity.FINISHED     -> GameStatus.FINISHED
     }
 }

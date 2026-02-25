@@ -1,19 +1,20 @@
 package datasource.database
 
-import datasource.model.CellEntity
 import datasource.model.GameStatusEntity
-import domain.model.GameStatus
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.javatime.datetime
 
-object GameTable: Table("game") {
-    val id =  uuid("id").autoGenerate()
+object GameTable : Table("game") {
+    val id = uuid("id").autoGenerate()
     val board = text("board")
-    val user1 = reference("user1", Users.id, ReferenceOption.CASCADE, ReferenceOption.CASCADE)
-    val user2 = optReference("user2", Users.id, ReferenceOption.CASCADE, ReferenceOption.CASCADE)
-    val currentTurn = optReference("current_turn", Users.id)
-    val state = enumeration("state", GameStatusEntity::class)
-    val winner = optReference("winner", Users.id)
+    val user1 = reference("user1", Users.id, onDelete = ReferenceOption.CASCADE)
+    val user2 = optReference("user2", Users.id, onDelete = ReferenceOption.CASCADE)
+    val isBot = bool("is_bot")
+    val player1Symbol = text("player1_symbol")
+    val player2Symbol = text("player2_symbol")
+    val state = text("state_json")
+    val isTwoPlayers = bool("is_two_players")
 
-    override val primaryKey = PrimaryKey(GameTable.id, name = "GameBoardID")
+    override val primaryKey = PrimaryKey(id)
 }

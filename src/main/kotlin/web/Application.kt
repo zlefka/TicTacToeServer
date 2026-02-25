@@ -1,6 +1,7 @@
 package web
 
 import io.ktor.server.application.Application
+import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import web.module.configureAuthentication
@@ -18,9 +19,9 @@ fun main() {
 
 fun Application.module() {
     configureSerialization()
-    configureRouting()
-    configureFeatures()
     configureKoin()
+    configureFeatures()
     configureDatabases()
     configureAuthentication()
+    configureRouting()
 }

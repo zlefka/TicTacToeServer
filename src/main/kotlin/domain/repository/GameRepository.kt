@@ -1,7 +1,8 @@
 package domain.repository
 
-import datasource.model.GameEntity
+
 import domain.model.CurrentGame
+import domain.model.User
 import java.util.UUID
 
 interface GameRepository {

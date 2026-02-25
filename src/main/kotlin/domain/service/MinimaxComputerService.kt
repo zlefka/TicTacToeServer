@@ -1,11 +1,11 @@
 package domain.service
 
-import datasource.mapper.MapperDomainData
 import domain.repository.GameRepository
 import domain.model.Cell
 import domain.model.CurrentGame
 import domain.model.GameBoard
-import domain.model.GameStatus
+import domain.model.GameState
+import java.util.UUID
 
 class MinimaxComputerService(private val repository: GameRepository) : GameService {
     private fun score(currentGame: CurrentGame, depth: Int, player: Cell, computer: Cell): Int {
@@ -68,50 +68,23 @@ class MinimaxComputerService(private val repository: GameRepository) : GameServi
         return bestMove
     }
 
-    override fun makeMove(game: CurrentGame): CurrentGame {
+    override fun makeMove(game: CurrentGame, playerId: UUID?, move: Pair<Int, Int>?): CurrentGame {
         val bestMove = findBestMove(game)
+
         val newBoard = game.board.copy()
-        newBoard.makeMove(bestMove, Cell.O)
+        newBoard.makeMove(bestMove, game.player2Symbol!!)
+
         val gameWithUpdatedBoard = game.copy(board = newBoard)
-        val updatedGame = when(checkGameStatus(gameWithUpdatedBoard)) {
-            GameStatus.COMPUTER_WON -> gameWithUpdatedBoard.copy(status = GameStatus.FINISHED, winnerIs = game.player2?.id)
-            GameStatus.PLAYER_WON -> gameWithUpdatedBoard.copy(status = GameStatus.FINISHED, winnerIs = game.player1.id)
-            GameStatus.DRAW -> gameWithUpdatedBoard.copy(status = GameStatus.FINISHED, winnerIs = null)
-            else -> gameWithUpdatedBoard.copy(status = GameStatus.IN_PROGRESS, currentTurn = game.player1.id)
-        }
-        repository.save(updatedGame)
-        return updatedGame
-    }
 
-    override fun validatePlayerMove(
-        previousGame: CurrentGame,
-        currentGame: CurrentGame
-    ): Boolean {
-        val prevCells = previousGame.board.field
-        val currCells = currentGame.board.field
-        var diffCount = 0
+        if(validatePlayerMove(game, gameWithUpdatedBoard, playerId)) {
 
-        for (i in 0 until GameBoard.SIZE) {
-            for (j in 0 until GameBoard.SIZE) {
-                if (prevCells[i][j] != currCells[i][j]) {
-                    if (prevCells[i][j] != Cell.EMPTY || currCells[i][j] != Cell.X) {
-                        return false // изменён чужой ход или неправильный символ
-                    }
-                    diffCount++
-                }
-            }
-        }
+            val newState = calculateState(gameWithUpdatedBoard)
 
-        return diffCount == 1
-    }
+            val updatedGame = gameWithUpdatedBoard.copy(state = newState)
 
-    override fun checkGameStatus(currentGame: CurrentGame): GameStatus {
-        return when {
-            currentGame.board.checkWin(Cell.O) -> GameStatus.COMPUTER_WON
-            currentGame.board.checkWin(Cell.X) -> GameStatus.PLAYER_WON
-            currentGame.board.getAvailableMoves().isEmpty() -> GameStatus.DRAW
-            else                                            -> GameStatus.IN_PROGRESS
+            repository.save(updatedGame)
 
-        }
+            return updatedGame
+        } else return game
     }
 }

@@ -1,3 +1,5 @@
+package web.module
+
 import datasource.database.GameTable
 import datasource.database.Users
 import io.ktor.server.application.Application
@@ -5,6 +7,7 @@ import io.ktor.server.application.log
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+
 
 fun Application.configureDatabases() {
     val jdbcUrl = environment.config.property("storage.jdbcURL").getString()

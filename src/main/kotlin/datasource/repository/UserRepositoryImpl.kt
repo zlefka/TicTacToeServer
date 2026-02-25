@@ -21,22 +21,42 @@ class UserRepositoryImpl() : UserRepository {
     }
 
     override fun getUserById(uuid: UUID): User? {
-        val userId = transaction {
-            Users.select(listOf(Users.id eq uuid)).singleOrNull()
-        } ?: return null
-        return User(userId[Users.id], userId[Users.login], userId[Users.passwordHash])
+        return transaction {
+            Users.select (Users.id, Users.login, Users.passwordHash).where(Users.id eq uuid)
+                .map { row ->
+                    User(
+                        id = row[Users.id],
+                        login = row[Users.login],
+                        passwordHash = row[Users.passwordHash],
+                    )
+                }
+                .singleOrNull()
+        }
     }
 
     override fun getUserByLogin(login: String): User? {
-        val userLogin = transaction {
-            Users.select(listOf(Users.login eq login)).singleOrNull()
-        } ?: return null
-        return User(userLogin[Users.id], userLogin[Users.login], userLogin[Users.passwordHash])
+        return transaction {
+            Users.select( Users.id, Users.login, Users.passwordHash ).where(Users.login eq login)
+                .map { row ->
+                    User(
+                        id = row[Users.id],
+                        login = row[Users.login],
+                        passwordHash = row[Users.passwordHash],
+                    )
+                }
+                .singleOrNull()
+        }
     }
 
     override fun isUserExistsByLogin(login: String): Boolean {
         return transaction {
-            !Users.select(Users.login eq login).empty()
+            !Users.select( Users.login ).where(Users.login eq login).empty()
+        }
+    }
+
+    override fun getComputer(): UUID? {
+        return transaction {
+            Users.select(Users.id).where(Users.login eq "computer").map { it[Users.id] }.singleOrNull()
         }
     }
 
