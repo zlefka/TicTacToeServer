@@ -19,7 +19,8 @@ import java.util.UUID
 fun Route.newGame(gameRepo: GameRepository, userService: UserService) {
     post("/game/new") {
         try {
-            val principal = call.principal<UserIdPrincipal>()!!
+            val principal = call.principal<UserIdPrincipal>()
+                ?: return@post call.respond(HttpStatusCode.Unauthorized)
             val playerId = UUID.fromString(principal.name)
 
             val request = call.receive<CreateGameRequest>()

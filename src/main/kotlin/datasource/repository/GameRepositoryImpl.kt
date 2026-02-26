@@ -19,14 +19,16 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import web.serialization.UUIDSerializer
 
-class GameRepositoryImpl(private val json: Json = Json {
-    prettyPrint = true
-    isLenient = true
-    ignoreUnknownKeys = true
-    serializersModule = SerializersModule {
-        contextual(UUID::class, UUIDSerializer)
+class GameRepositoryImpl(
+    private val json: Json = Json {
+        prettyPrint = true
+        isLenient = true
+        ignoreUnknownKeys = true
+        serializersModule = SerializersModule {
+            contextual(UUID::class, UUIDSerializer)
+        }
     }
-}) : GameRepository {
+) : GameRepository {
 
     override fun save(game: CurrentGame) {
         transaction {
@@ -79,7 +81,11 @@ class GameRepositoryImpl(private val json: Json = Json {
         val board = json.decodeFromString<List<List<CellEntity>>>(boardStr)
 
         val player1Row = Users.selectAll().where { Users.id eq gameDB[GameTable.user1] }.single()
-        val player1 = User(player1Row[Users.id], player1Row[Users.login], player1Row[Users.passwordHash])
+        val player1 = User(
+            player1Row[Users.id],
+            player1Row[Users.login],
+            player1Row[Users.passwordHash]
+        )
 
         val player2 = gameDB[GameTable.user2]?.let { user2Id ->
             Users.selectAll()
@@ -89,7 +95,6 @@ class GameRepositoryImpl(private val json: Json = Json {
                     User(row[Users.id], row[Users.login], row[Users.passwordHash])
                 }
         }
-
 
 
         val gameState = json.decodeFromString<GameState>(gameDB[GameTable.state])
@@ -116,4 +121,47 @@ class GameRepositoryImpl(private val json: Json = Json {
             isTwoPlayers = gameDB[GameTable.isTwoPlayers]
         )
     }
+
+    override fun getAvailableGames(): List<CurrentGame> = transaction {
+        GameTable.selectAll().where { GameTable.state eq json.encodeToString(GameState.WaitingForPlayers) }
+            .mapNotNull { gameDB ->
+                val board = json.decodeFromString<List<List<CellEntity>>>(gameDB[GameTable.board])
+                val player1Row = Users.selectAll().where { Users.id eq gameDB[GameTable.user1] }.single()
+                val player1 = User(
+                    player1Row[Users.id],
+                    player1Row[Users.login],
+                    player1Row[Users.passwordHash]
+                )
+
+                val player2 = gameDB[GameTable.user2]?.let { user2Id ->
+                    Users.selectAll()
+                        .where { Users.id eq user2Id }
+                        .singleOrNull()
+                        ?.let { row ->
+                            User(row[Users.id], row[Users.login], row[Users.passwordHash])
+                        }
+                }
+                CurrentGame(
+                    id = gameDB[GameTable.id],
+                    board = GameBoard(Array(board.size) { i ->
+                        Array(board[i].size) { j ->
+                            when (board[i][j]) {
+                                CellEntity.EMPTY -> Cell.EMPTY
+                                CellEntity.X     -> Cell.X
+                                CellEntity.O     -> Cell.O
+                            }
+                        }
+                    }),
+                    player1 = player1,
+                    player2 = player2,
+                    isBot = gameDB[GameTable.isBot],
+                    player1Symbol = Cell.valueOf(gameDB[GameTable.player1Symbol]),
+                    player2Symbol = Cell.valueOf(gameDB[GameTable.player2Symbol]),
+                    state = json.decodeFromString(gameDB[GameTable.state]),
+                    isTwoPlayers = gameDB[GameTable.isTwoPlayers]
+                )
+            }
+    }
+
+
 }

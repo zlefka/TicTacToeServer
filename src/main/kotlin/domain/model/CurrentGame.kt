@@ -48,25 +48,30 @@ data class CurrentGame(
         val updatedBoard = this.board.copy()
         val (row, col) = coordinates
         val currentPlayerID = (state as? GameState.PlayerTurn)?.playerID
-        if(playerID != currentPlayerID) {
+        if (playerID != currentPlayerID) {
             throw IllegalArgumentException("It is another player's turn")
         }
 
-        val symbol = if(playerID == player1.id) player1Symbol else player2Symbol!!
-        if(board.field[row][col] != Cell.EMPTY) {
+        val symbol = if (playerID == player1.id) player1Symbol else player2Symbol!!
+        if (board.field[row][col] != Cell.EMPTY) {
             throw IllegalArgumentException("This cell is busy")
         } else {
             updatedBoard.field[row][col] = symbol
         }
 
         val newState = when {
-            updatedBoard.checkWin(symbol) -> GameState.Winner(playerID)
+            updatedBoard.checkWin(symbol)              -> GameState.Winner(playerID)
             updatedBoard.getAvailableMoves().isEmpty() -> GameState.Draw
-            else -> {
-                val nextPlayerID = if(playerID == player1.id) player2?.id ?: player1.id else player1.id
+            else                                       -> {
+                val nextPlayerID = if (playerID == player1.id) player2?.id ?: player1.id else player1.id
                 GameState.PlayerTurn(nextPlayerID)
             }
         }
         return copy(board = updatedBoard, state = newState)
     }
+
+    fun join(player: User): CurrentGame? =
+        if (!this.isBot && this.isTwoPlayers && this.player2 == null && this.state == GameState.WaitingForPlayers) {
+            this.copy(player2 = player, state = GameState.PlayerTurn(player1.id))
+        } else null
 }

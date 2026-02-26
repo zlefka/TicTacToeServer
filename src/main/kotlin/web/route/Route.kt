@@ -18,6 +18,8 @@ fun Application.configureRouting() {
         authenticate("auth-basic") {
             newGame(gameRepo, userService)
             gameById(gameRepo, userService)
+            getCurrentGames(gameRepo, userService)
+            joinGame(gameRepo, userService)
         }
     }
 }
