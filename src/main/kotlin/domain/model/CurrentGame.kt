@@ -44,7 +44,7 @@ data class CurrentGame(
         }
     }
 
-    private fun applyMove(coordinates: Pair<Int, Int>, playerID: UUID): CurrentGame {
+    fun makeMove(coordinates: Pair<Int, Int>, playerID: UUID): CurrentGame {
         val updatedBoard = this.board.copy()
         val (row, col) = coordinates
         val currentPlayerID = (state as? GameState.PlayerTurn)?.playerID

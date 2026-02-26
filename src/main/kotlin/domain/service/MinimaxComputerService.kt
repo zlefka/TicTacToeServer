@@ -3,6 +3,7 @@ package domain.service
 import domain.repository.GameRepository
 import domain.model.Cell
 import domain.model.CurrentGame
+import domain.model.GameState
 import java.util.UUID
 
 class MinimaxComputerService(private val repository: GameRepository) : GameService {
@@ -66,23 +67,51 @@ class MinimaxComputerService(private val repository: GameRepository) : GameServi
         return bestMove
     }
 
-    override fun makeMove(game: CurrentGame, playerId: UUID?, move: Pair<Int, Int>?): CurrentGame {
-        val bestMove = findBestMove(game)
+    override fun makeMove(game: CurrentGame, playerId: UUID, move: Pair<Int, Int>): CurrentGame {
+//        val bestMove = findBestMove(game)
+//
+//        val newBoard = game.board.copy()
+//        newBoard.makeMove(bestMove, game.player2Symbol!!)
+//
+//        val gameWithUpdatedBoard = game.copy(board = newBoard)
+//
+//        if(validatePlayerMove(game, gameWithUpdatedBoard, playerId)) {
+//
+//            val newState = calculateState(gameWithUpdatedBoard)
+//
+//            val updatedGame = gameWithUpdatedBoard.copy(state = newState)
+//
+//            repository.save(updatedGame)
+//
+//            return updatedGame
+//        } else return game
 
-        val newBoard = game.board.copy()
-        newBoard.makeMove(bestMove, game.player2Symbol!!)
+        val afterMove = game.makeMove(move, playerId)
 
-        val gameWithUpdatedBoard = game.copy(board = newBoard)
+        if (afterMove.state !is GameState.PlayerTurn) {
+            repository.save(afterMove)
+            return afterMove
+        }
 
-        if(validatePlayerMove(game, gameWithUpdatedBoard, playerId)) {
+        if (afterMove.isBot) {
 
-            val newState = calculateState(gameWithUpdatedBoard)
+            val botId = afterMove.player2?.id
+                ?: error("Bot user missing")
 
-            val updatedGame = gameWithUpdatedBoard.copy(state = newState)
+            val currentTurn = afterMove.state.playerID
 
-            repository.save(updatedGame)
+            if (currentTurn == botId) {
 
-            return updatedGame
-        } else return game
+                val botMove = findBestMove(afterMove)
+
+                val afterBotMove = afterMove.makeMove(botMove, botId)
+
+                repository.save(afterBotMove)
+                return afterBotMove
+            }
+        }
+
+        repository.save(afterMove)
+        return afterMove
     }
 }

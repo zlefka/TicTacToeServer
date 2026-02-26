@@ -12,7 +12,7 @@ import web.mapper.MapperDomainWeb
 import java.util.UUID
 
 fun Route.getCurrentGames(gameRepo: GameRepository, userService: UserService) {
-    get("available") {
+    get("/game/available") {
         val principal = call.principal<UserIdPrincipal>()
             ?: return@get call.respond(HttpStatusCode.Unauthorized)
 
