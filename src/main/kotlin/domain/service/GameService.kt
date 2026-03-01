@@ -1,8 +1,6 @@
 package domain.service
 
-import domain.model.Cell
 import domain.model.CurrentGame
-import domain.model.GameBoard
 import domain.model.GameState
 import java.util.UUID
 
@@ -16,7 +14,7 @@ interface GameService {
             return GameState.Winner(game.player1.id)
         }
 
-        if(game.player2 != null && game.player2Symbol != null && board.checkWin(game.player2Symbol)) {
+        if(game.player2 != null && board.checkWin(game.player2Symbol)) {
             return GameState.Winner(game.player2.id)
         }
 

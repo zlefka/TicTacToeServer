@@ -68,24 +68,6 @@ class MinimaxComputerService(private val repository: GameRepository) : GameServi
     }
 
     override fun makeMove(game: CurrentGame, playerId: UUID, move: Pair<Int, Int>): CurrentGame {
-//        val bestMove = findBestMove(game)
-//
-//        val newBoard = game.board.copy()
-//        newBoard.makeMove(bestMove, game.player2Symbol!!)
-//
-//        val gameWithUpdatedBoard = game.copy(board = newBoard)
-//
-//        if(validatePlayerMove(game, gameWithUpdatedBoard, playerId)) {
-//
-//            val newState = calculateState(gameWithUpdatedBoard)
-//
-//            val updatedGame = gameWithUpdatedBoard.copy(state = newState)
-//
-//            repository.save(updatedGame)
-//
-//            return updatedGame
-//        } else return game
-
         val afterMove = game.makeMove(move, playerId)
 
         if (afterMove.state !is GameState.PlayerTurn) {
