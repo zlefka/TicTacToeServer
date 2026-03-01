@@ -25,6 +25,7 @@ fun Application.configureRouting() {
             getCurrentGames(gameRepo, userService)
             joinGame(gameRepo, userService)
             makeMove(gameRepo, userService, computerService, twoPlayersService)
+            getUserInfo(userService)
         }
     }
 }

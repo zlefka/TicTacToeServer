@@ -8,6 +8,7 @@ import io.ktor.server.auth.principal
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
+import web.mapper.MapperDomainWeb
 import java.util.UUID
 
 fun Route.joinGame(gameRepo: GameRepository, userService: UserService) {
@@ -30,7 +31,8 @@ fun Route.joinGame(gameRepo: GameRepository, userService: UserService) {
         if (game.player1.id != playerId) {
             val updatedGame = game.join(player) ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "You can't join the game"))
             gameRepo.save(updatedGame)
-            call.respond(HttpStatusCode.OK, updatedGame)
+            val response = MapperDomainWeb.fromDomainToWeb(updatedGame)
+            call.respond(HttpStatusCode.OK, response)
         } else call.respond(HttpStatusCode.BadRequest, mapOf("error" to "You can't join the game"))
     }
 }
