@@ -18,6 +18,7 @@ import java.util.UUID
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import web.serialization.UUIDSerializer
+import org.jetbrains.exposed.sql.and
 
 class GameRepositoryImpl(
     private val json: Json = Json {
@@ -58,7 +59,7 @@ class GameRepositoryImpl(
                     it[user2] = game.player2?.id
                     it[isBot] = game.isBot
                     it[player1Symbol] = game.player1Symbol.toString()
-                    it[player2Symbol] = game.player2Symbol.toString()
+                    it[player2Symbol] = game.player2Symbol?.name
                     it[state] = stateJson
                     it[isTwoPlayers] = game.isTwoPlayers
                 }
@@ -116,14 +117,16 @@ class GameRepositoryImpl(
             player2 = player2,
             isBot = gameDB[GameTable.isBot],
             player1Symbol = Cell.valueOf(gameDB[GameTable.player1Symbol]),
-            player2Symbol = Cell.valueOf(gameDB[GameTable.player2Symbol]),
+            player2Symbol = gameDB[GameTable.player2Symbol]?.let { Cell.valueOf(it)},
             state = gameState,
             isTwoPlayers = gameDB[GameTable.isTwoPlayers]
         )
     }
 
     override fun getAvailableGames(): List<CurrentGame> = transaction {
-        GameTable.selectAll().where { GameTable.state eq json.encodeToString(GameState.WaitingForPlayers) }
+        GameTable.selectAll().where { (GameTable.isTwoPlayers eq true) and
+                (GameTable.user2.isNull()) and
+                (GameTable.isBot eq false) }
             .mapNotNull { gameDB ->
                 val board = json.decodeFromString<List<List<CellEntity>>>(gameDB[GameTable.board])
                 val player1Row = Users.selectAll().where { Users.id eq gameDB[GameTable.user1] }.single()
@@ -156,7 +159,7 @@ class GameRepositoryImpl(
                     player2 = player2,
                     isBot = gameDB[GameTable.isBot],
                     player1Symbol = Cell.valueOf(gameDB[GameTable.player1Symbol]),
-                    player2Symbol = Cell.valueOf(gameDB[GameTable.player2Symbol]),
+                    player2Symbol = gameDB[GameTable.player2Symbol]?.let { Cell.valueOf(it)},
                     state = json.decodeFromString(gameDB[GameTable.state]),
                     isTwoPlayers = gameDB[GameTable.isTwoPlayers]
                 )

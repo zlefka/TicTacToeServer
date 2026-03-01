@@ -10,7 +10,7 @@ object GameTable : Table("game") {
     val user2 = optReference("user2", Users.id, onDelete = ReferenceOption.CASCADE)
     val isBot = bool("is_bot")
     val player1Symbol = text("player1_symbol")
-    val player2Symbol = text("player2_symbol")
+    val player2Symbol = text("player2_symbol").nullable()
     val state = text("state_json")
     val isTwoPlayers = bool("is_two_players")
 
