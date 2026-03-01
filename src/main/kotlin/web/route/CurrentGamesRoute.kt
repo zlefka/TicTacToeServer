@@ -9,7 +9,6 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import web.mapper.MapperDomainWeb
-import java.util.UUID
 
 fun Route.getCurrentGames(gameRepo: GameRepository, userService: UserService) {
     get("/game/available") {

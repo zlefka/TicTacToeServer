@@ -59,7 +59,7 @@ class GameRepositoryImpl(
                     it[user2] = game.player2?.id
                     it[isBot] = game.isBot
                     it[player1Symbol] = game.player1Symbol.toString()
-                    it[player2Symbol] = game.player2Symbol?.name
+                    it[player2Symbol] = game.player2Symbol.toString()
                     it[state] = stateJson
                     it[isTwoPlayers] = game.isTwoPlayers
                 }
@@ -117,7 +117,7 @@ class GameRepositoryImpl(
             player2 = player2,
             isBot = gameDB[GameTable.isBot],
             player1Symbol = Cell.valueOf(gameDB[GameTable.player1Symbol]),
-            player2Symbol = gameDB[GameTable.player2Symbol]?.let { Cell.valueOf(it)},
+            player2Symbol = Cell.valueOf(gameDB[GameTable.player2Symbol]),
             state = gameState,
             isTwoPlayers = gameDB[GameTable.isTwoPlayers]
         )
@@ -159,7 +159,7 @@ class GameRepositoryImpl(
                     player2 = player2,
                     isBot = gameDB[GameTable.isBot],
                     player1Symbol = Cell.valueOf(gameDB[GameTable.player1Symbol]),
-                    player2Symbol = gameDB[GameTable.player2Symbol]?.let { Cell.valueOf(it)},
+                    player2Symbol = Cell.valueOf(gameDB[GameTable.player2Symbol]),
                     state = json.decodeFromString(gameDB[GameTable.state]),
                     isTwoPlayers = gameDB[GameTable.isTwoPlayers]
                 )

@@ -43,19 +43,15 @@ fun Route.makeMove(
         }
 
         val moveRequest = call.receive<MoveRequest>()
-        println("Done")
-        if (moveRequest.row !in 1..<SIZE  && moveRequest.col !in 1..<SIZE ) return@post call.respond(
+        if (moveRequest.row !in 0..<SIZE  || moveRequest.col !in 0..<SIZE ) return@post call.respond(
             HttpStatusCode.BadRequest,
             mapOf("error" to "Invalid move")
         )
-        println("Done2")
         val move = Pair(moveRequest.row, moveRequest.col)
-        println("Done3")
 
         val gameService = if (game.isBot) computerService else twoPlayersService
-        println("Done4")
+
         val updatedGame = gameService.makeMove(game, playerId, move)
-        println("Done5")
         gameRepo.save(updatedGame)
 
         call.respond(MapperDomainWeb.fromDomainToWeb(updatedGame))

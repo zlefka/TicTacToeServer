@@ -9,7 +9,7 @@ data class CurrentGame(
     val player2: User?,
     val isBot: Boolean,
     val player1Symbol: Cell,
-    val player2Symbol: Cell?,
+    val player2Symbol: Cell,
     val state: GameState,
     val isTwoPlayers: Boolean,
 ) {
@@ -24,7 +24,7 @@ data class CurrentGame(
                     player2 = null,
                     isBot = false,
                     player1Symbol = Cell.X,
-                    player2Symbol = null,
+                    player2Symbol = Cell.O,
                     state = GameState.WaitingForPlayers,
                     isTwoPlayers = true
                 )
@@ -45,6 +45,10 @@ data class CurrentGame(
     }
 
     fun makeMove(coordinates: Pair<Int, Int>, playerID: UUID): CurrentGame {
+        if (this.state is GameState.Winner || this.state is GameState.Draw) {
+            throw IllegalStateException("Game is already finished")
+        }
+
         val updatedBoard = this.board.copy()
         val (row, col) = coordinates
         val currentPlayerID = (state as? GameState.PlayerTurn)?.playerID
@@ -52,7 +56,11 @@ data class CurrentGame(
             throw IllegalArgumentException("It is another player's turn")
         }
 
-        val symbol = if (playerID == player1.id) player1Symbol else player2Symbol!!
+        val symbol = when (playerID) {
+            player1.id -> player1Symbol
+            player2?.id -> if (player1Symbol == Cell.X) Cell.O else Cell.X
+            else -> throw IllegalArgumentException("Invalid player")
+        }
         if (board.field[row][col] != Cell.EMPTY) {
             throw IllegalArgumentException("This cell is busy")
         } else {
