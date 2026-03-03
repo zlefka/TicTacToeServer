@@ -49,7 +49,6 @@ class GameRepositoryImpl(
             println("Serializing state: ${game.state}")
 
             val stateJson = json.encodeToString(game.state)
-            println("encoded")
 
             if (idExists == null) {
                 GameTable.insert {

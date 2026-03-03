@@ -6,7 +6,12 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.log
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.security.MessageDigest
+import java.util.Base64
+import java.util.UUID
 
 
 fun Application.configureDatabases() {
@@ -15,7 +20,7 @@ fun Application.configureDatabases() {
     val password = environment.config.property("storage.password").getString()
     val driver = environment.config.property("storage.driverClassName").getString()
 
-    log.info("Подключение к базе данных по URL: $jdbcUrl")
+    log.info("Connecting to: $jdbcUrl")
 
     try {
         Database.connect(
@@ -26,11 +31,29 @@ fun Application.configureDatabases() {
         )
 
         transaction {
-
             SchemaUtils.create(Users, GameTable)
-            log.info("Таблицы базы данных проверены/созданы.")
+            log.info("Database tables created successfully.")
+
+            val botLogin = "computer"
+            val existingBot = Users.select (Users.login).where(Users.login eq botLogin ).firstOrNull()
+            if (existingBot == null) {
+                Users.insert {
+                    it[id] = UUID.randomUUID()
+                    it[login] = botLogin
+                    it[passwordHash] = hashPasswordForInit(UUID.randomUUID().toString())
+                }
+                log.info("Bot created")
+            } else {
+                log.info("Bot already exists")
+            }
         }
     } catch (_: Exception) {
-        log.error("Ошибка подключения к БД")
+        log.error("Error while connecting to database")
     }
+}
+
+fun hashPasswordForInit(password: String): String {
+    val md = MessageDigest.getInstance("SHA-256")
+    val hashed = md.digest(password.toByteArray())
+    return Base64.getEncoder().encodeToString(hashed)
 }

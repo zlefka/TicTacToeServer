@@ -9,7 +9,7 @@ import io.ktor.server.routing.post
 import web.model.LoginRequest
 
 fun Route.loginRoute(userService: UserService) {
-    post("/login") {
+    post("/game/login") {
         val loginDto = call.receive<LoginRequest>()
 
         val auth = userService.authenticate(loginDto.login, loginDto.password)

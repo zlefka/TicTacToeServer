@@ -10,7 +10,7 @@ import io.ktor.server.routing.get
 import java.util.UUID
 
 fun Route.getUserInfo(userService: UserService) {
-    get("/user/{id}") {
+    get("/game/user/{id}") {
         val principal = call.principal<UserIdPrincipal>()
             ?: return@get call.respond(HttpStatusCode.Unauthorized)
 
