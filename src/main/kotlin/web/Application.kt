@@ -6,6 +6,7 @@ import io.ktor.server.netty.Netty
 import web.module.configureAuthentication
 import web.module.configureDatabases
 import web.module.configureFeatures
+import web.module.configureJWT
 import web.module.configureKoin
 import web.module.configureSerialization
 import web.route.configureRouting
@@ -21,6 +22,6 @@ fun Application.module() {
     configureKoin()
     configureFeatures()
     configureDatabases()
-    configureAuthentication()
+    configureJWT()
     configureRouting()
 }

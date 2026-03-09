@@ -8,24 +8,31 @@ import io.ktor.server.auth.authenticate
 import io.ktor.server.routing.routing
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.getKoin
+import web.security.AuthService
 
 fun Application.configureRouting() {
     val userService: UserService = getKoin().get()
     val gameRepo: GameRepository = getKoin().get()
     val computerService = getKoin().get<GameService>(named("computer"))
     val twoPlayersService = getKoin().get<GameService>(named("twoPlayers"))
+    val authService: AuthService = getKoin().get()
     routing {
         root()
         signUpRoute(userService)
-        loginRoute(userService)
+        loginRoute(authService)
 
-        authenticate("auth-basic") {
+        refreshAccessToken(authService)
+        refreshToken(authService)
+
+        authenticate("jwt-auth") {
+            aboutMe(userService)
             newGame(gameRepo, userService)
             gameById(gameRepo, userService)
             getCurrentGames(gameRepo, userService)
             joinGame(gameRepo, userService)
             makeMove(gameRepo, userService, computerService, twoPlayersService)
             getUserInfo(userService)
+            userGameHistoryRoute(gameRepo)
         }
     }
 }

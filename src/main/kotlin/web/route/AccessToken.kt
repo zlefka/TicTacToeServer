@@ -6,16 +6,16 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import web.security.AuthService
-import web.security.JwtRequest
+import web.security.RefreshJwtRequest
 
-fun Route.loginRoute(authService: AuthService) {
-    post("/auth/login") {
-        val request = call.receive<JwtRequest>()
+fun Route.refreshAccessToken(authService: AuthService) {
+    post("/auth/refresh/access") {
+        val request = call.receive<RefreshJwtRequest>()
 
-        val auth = authService.login(request)
+        val auth = authService.refreshAccessToken(request)
 
         if ( auth == null) {
-            call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "LogIn error"))
+            call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token error"))
         } else {
             call.respond(HttpStatusCode.OK, auth)
         }

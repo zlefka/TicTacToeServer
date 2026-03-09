@@ -9,7 +9,7 @@ import io.ktor.server.routing.post
 import web.model.SignUpRequest
 
 fun Route.signUpRoute(userService: UserService) {
-    post("/game/signup") {
+    post("/auth/signup") {
         try {
             val signupDto = call.receive<SignUpRequest>()
 
