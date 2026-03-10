@@ -1,6 +1,7 @@
 package datasource.model
 
 import java.util.UUID
+import java.time.Instant
 
 class GameEntity(
     val id: UUID,
@@ -12,5 +13,6 @@ class GameEntity(
     val player2Symbol: CellEntity?,
     val state: String,
     val isTwoPlayers: Boolean,
+    val createdAt: Instant = Instant.now()
 ) {
 }

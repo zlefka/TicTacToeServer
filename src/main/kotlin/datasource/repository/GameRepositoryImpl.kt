@@ -7,6 +7,8 @@ import domain.model.Cell
 import domain.model.CurrentGame
 import domain.model.GameBoard
 import domain.model.GameState
+import domain.model.PlayerStats
+import domain.model.Statistic
 import domain.model.User
 import domain.repository.GameRepository
 import kotlinx.serialization.encodeToString
@@ -19,6 +21,9 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import web.serialization.UUIDSerializer
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.SqlExpressionBuilder
+import org.jetbrains.exposed.sql.or
+import java.time.Instant
 
 class GameRepositoryImpl(
     private val json: Json = Json {
@@ -61,6 +66,7 @@ class GameRepositoryImpl(
                     it[player2Symbol] = game.player2Symbol.toString()
                     it[state] = stateJson
                     it[isTwoPlayers] = game.isTwoPlayers
+                    it[createdAt] = Instant.now()
                 }
             } else {
                 GameTable.update({ GameTable.id eq game.id }) {
@@ -163,6 +169,126 @@ class GameRepositoryImpl(
                     isTwoPlayers = gameDB[GameTable.isTwoPlayers]
                 )
             }
+    }
+
+    override fun getCompletedGames(userId: UUID): List<CurrentGame> = transaction {
+        GameTable.selectAll()
+            .mapNotNull { row ->
+                if (row[GameTable.user1] != userId && row[GameTable.user2] != userId) return@mapNotNull null
+
+                val state = json.decodeFromString<GameState>(row[GameTable.state])
+
+                if (state !is GameState.Draw && state !is GameState.Winner) return@mapNotNull null
+
+                val boardJson = row[GameTable.board]
+                val boardList = json.decodeFromString<List<List<CellEntity>>>(boardJson)
+                val mapBoard = Array(boardList.size) { i ->
+                    Array(boardList[i].size) { j ->
+                        when (boardList[i][j]) {
+                            CellEntity.EMPTY -> Cell.EMPTY
+                            CellEntity.X     -> Cell.X
+                            CellEntity.O     -> Cell.O
+                        }
+                    }
+                }
+
+                val player1Row = Users.selectAll().where { Users.id eq row[GameTable.user1] }.single()
+                val player1 = User(
+                    id = player1Row[Users.id],
+                    login = player1Row[Users.login],
+                    passwordHash = player1Row[Users.passwordHash]
+                )
+
+                val player2 = row[GameTable.user2]?.let { user2Id ->
+                    Users.selectAll().where { Users.id eq user2Id }
+                        .singleOrNull()
+                        ?.let { r -> User(r[Users.id], r[Users.login], r[Users.passwordHash]) }
+                }
+
+                CurrentGame(
+                    id = row[GameTable.id],
+                    board = GameBoard(mapBoard),
+                    player1 = player1,
+                    player2 = player2,
+                    isBot = row[GameTable.isBot],
+                    player1Symbol = Cell.valueOf(row[GameTable.player1Symbol]),
+                    player2Symbol = Cell.valueOf(row[GameTable.player2Symbol]),
+                    state = state,
+                    isTwoPlayers = row[GameTable.isTwoPlayers]
+                )
+            }
+    }
+
+    override fun getStatistic(limit: Int): List<Statistic> = transaction {
+
+        val stats = mutableMapOf<UUID, PlayerStats>()
+
+        GameTable.selectAll().forEach { row ->
+
+            val state = json.decodeFromString<GameState>(row[GameTable.state])
+
+            val player1 = row[GameTable.user1]
+            val player2 = row[GameTable.user2]
+
+            stats.putIfAbsent(player1, PlayerStats())
+            player2?.let { stats.putIfAbsent(it, PlayerStats()) }
+
+            when (state) {
+
+                is GameState.Winner -> {
+
+                    val winner = state.winnerID
+
+                    if (winner == player1) {
+
+                        stats[player1]!!.wins++
+
+                        player2?.let {
+                            stats[it]!!.loses++
+                        }
+
+                    } else {
+
+                        player2?.let {
+                            stats[it]!!.wins++
+                        }
+
+                        stats[player1]!!.loses++
+                    }
+                }
+
+                is GameState.Draw -> {
+
+                    stats[player1]!!.draws++
+
+                    player2?.let {
+                        stats[it]!!.draws++
+                    }
+                }
+
+                else -> {}
+            }
+        }
+
+        stats.map { (userId, stat) ->
+
+            val total = stat.wins + stat.loses + stat.draws
+
+            val ratio =
+                if (total == 0) 0.0
+                else stat.wins.toDouble() / total
+
+            Statistic(
+                userId = userId,
+                wins = stat.wins,
+                loses = stat.loses,
+                draws = stat.draws,
+                ratio = ratio
+            )
+
+        }
+            .sortedByDescending { it.ratio }
+            .take(limit)
     }
 
 

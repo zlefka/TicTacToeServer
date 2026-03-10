@@ -35,7 +35,8 @@ class MapperDomainWeb {
                 currentTurn = (game.state as? GameState.PlayerTurn)?.playerID?.toString(),
                 isTwoPlayers = game.isTwoPlayers,
                 status = statusString,
-                winnerIs = (game.state as? GameState.Winner)?.winnerID?.toString()
+                winnerIs = (game.state as? GameState.Winner)?.winnerID?.toString(),
+                createdAt = game.createdAt.toString()
             )
         }
     }

@@ -33,6 +33,7 @@ fun Application.configureRouting() {
             makeMove(gameRepo, userService, computerService, twoPlayersService)
             getUserInfo(userService)
             userGameHistoryRoute(gameRepo)
+            getStatistic(userService, gameRepo)
         }
     }
 }

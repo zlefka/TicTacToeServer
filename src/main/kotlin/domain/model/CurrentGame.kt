@@ -1,5 +1,6 @@
 package domain.model
 
+import java.time.Instant
 import java.util.UUID
 
 data class CurrentGame(
@@ -12,6 +13,7 @@ data class CurrentGame(
     val player2Symbol: Cell,
     val state: GameState,
     val isTwoPlayers: Boolean,
+    val createdAt: Instant = Instant.now()
 ) {
 
     companion object {
