@@ -21,8 +21,6 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import web.serialization.UUIDSerializer
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
-import org.jetbrains.exposed.sql.or
 import java.time.Instant
 
 class GameRepositoryImpl(

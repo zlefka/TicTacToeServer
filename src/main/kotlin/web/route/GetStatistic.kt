@@ -20,7 +20,7 @@ fun Route.getStatistic(userService: UserService, gameRepo: GameRepository) {
 
             StatisticDTO(
                 userId = userById?.id?.toString() ?: "unknown",
-                login = userById?.login ?: "unkown",
+                login = userById?.login ?: "unknown",
                 wins = it.wins,
                 loses = it.loses,
                 draws = it.draws,

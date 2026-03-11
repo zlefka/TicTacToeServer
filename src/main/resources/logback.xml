@@ -7,8 +7,4 @@
     <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>
-    <!-- Для более детальных логов Ktor и Koin можно добавить:
-    <logger name="io.ktor" level="DEBUG"/>
-    <logger name="org.koin" level="DEBUG"/>
-    -->
 </configuration>

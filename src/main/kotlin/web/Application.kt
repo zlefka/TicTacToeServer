@@ -3,7 +3,6 @@ package web
 import io.ktor.server.application.Application
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import web.module.configureAuthentication
 import web.module.configureDatabases
 import web.module.configureFeatures
 import web.module.configureJWT
